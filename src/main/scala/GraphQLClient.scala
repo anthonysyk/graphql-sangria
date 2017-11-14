@@ -1,4 +1,8 @@
 import sangria.renderer.SchemaRenderer
+import io.circe._
+import sangria.marshalling.circe._
+import sangria.schema.Schema
+import sangria.macros._
 
 object GraphQLClient {
 
@@ -9,8 +13,6 @@ object GraphQLClient {
     val graphQLSchema: String = SchemaRenderer.renderSchema(SchemaDefinitionMovie.GraphQLSchema)
     println(graphQLSchema)
 
-    val query =
-      graphql
 
 
 

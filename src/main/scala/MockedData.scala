@@ -27,7 +27,7 @@ object MockedData {
     description = Some("When Loki returns and threatens to steal the Tesseract and use it to take over the world, Nick Fury must form a team of elite agents and superheros - featuring Iron Man, Captain America, Thor, the Hulk, Agent Natasha Romanoff and Agent Barton - to save New York."),
     genres = Seq(Genre.ACTION, Genre.ADVENTURE, Genre.SCI_FI),
     actors = Seq(RobertDowneyJr, ChrisEvans, ScarlettJohansson),
-    rating = Some(89.0)
+    rating = Some(89.7)
   )
 
   val Avengers2 = Movie(
@@ -36,7 +36,7 @@ object MockedData {
     description = Some("When Tony Stark and Bruce Banner try to jump-start a dormant peacekeeping program called Ultron, things go horribly wrong and it's up to Earth's mightiest heroes to stop the villainous Ultron from enacting his terrible plan."),
     genres = Seq(Genre.ACTION, Genre.ADVENTURE, Genre.SCI_FI),
     actors = Seq(RobertDowneyJr, ChrisEvans, ScarlettJohansson),
-    rating = Some(86.0)
+    rating = Some(86.2)
   )
 
   val SpiderManHomeComing = Movie(

@@ -126,10 +126,10 @@ object SchemaDefinitionMovieWithoutDerivation {
     fields = fields[Unit, Video](
       Field(name = "id", fieldType = StringType, resolve = _.value.id),
       Field(name = "title", fieldType = StringType, resolve = _.value.title),
-      Field(name = "description", fieldType = StringType, resolve = _.value.description),
-      Field(name = "genres", fieldType = StringType, resolve = _.value.genres),
-      Field(name = "actors", fieldType = StringType, resolve = _.value.actors),
-      Field(name = "rating", fieldType = StringType, resolve = _.value.rating),
+      Field(name = "description", fieldType = OptionType(StringType), resolve = _.value.description),
+      Field(name = "genres", fieldType = ListType(GenreEnum), resolve = _.value.genres),
+      Field(name = "actors", fieldType = ListType(ActorType), resolve = _.value.actors),
+      Field(name = "rating", fieldType = OptionType(FloatType), resolve = _.value.rating),
       Field("topActors", ListType(ActorType), arguments = Argument("top", IntType) :: Nil, resolve = c => c.value.topActors(c.arg(Argument("top", IntType)))))
     )
 
@@ -143,7 +143,7 @@ object SchemaDefinitionMovieWithoutDerivation {
       Field("title", StringType, Some("the title of the movie."), resolve = _.value.title),
       Field("actors", ListType(ActorType), Some("the actors appearing in the movie"), resolve = _.value.actors),
       Field("genres", ListType(GenreEnum), Some("the genres of the movie"), resolve = _.value.genres),
-      Field(name = "rating", fieldType = StringType, resolve = _.value.rating)
+      Field(name = "rating", fieldType = OptionType(FloatType), resolve = _.value.rating)
     )
   )
 
@@ -156,7 +156,7 @@ object SchemaDefinitionMovieWithoutDerivation {
       Field("tile", StringType, Some("the title of the tvshow."), resolve = _.value.title),
       Field("actors", ListType(ActorType), Some("the actors appearing in the tvshow."), resolve = _.value.actors),
       Field("genres", ListType(GenreEnum), Some("the genres of the tvshow."), resolve = _.value.genres),
-      Field(name = "rating", fieldType = StringType, resolve = _.value.rating)
+      Field(name = "rating", fieldType = OptionType(FloatType), resolve = _.value.rating)
     )
   )
 
