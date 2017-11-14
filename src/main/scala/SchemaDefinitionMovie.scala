@@ -46,7 +46,7 @@ object SchemaDefinitionMovie {
   // Fonctionne aussi bien avec les Enumeration Scala que les sealed trait + case object
   implicit val GenreEnum: EnumType[Genre.Value] = deriveEnumType[Genre.Value]()
 
-  implicit val MovieType: ObjectType[Video, Movie] = deriveObjectType[Video, Movie]()
+  implicit val MovieType: ObjectType[Video, Movie] = deriveObjectType[Video, Movie](IncludeMethods("topActors"))
 
 //    val TopActorArg = Argument("top", IntType)
 //
@@ -118,17 +118,20 @@ object SchemaDefinitionMovieWithoutDerivation {
     )
   )
 
-  // _ correspond au trait Video (second type)
+  // _ correspond au trait Video
   // trait = interface
   val VideoType: InterfaceType[Unit, Video] = InterfaceType(
     name = "Video",
     description = "Template of any video",
     fields = fields[Unit, Video](
       Field(name = "id", fieldType = StringType, resolve = _.value.id),
-      Field(name = "title", fieldType = StringType, resolve = _.value.title)
-
+      Field(name = "title", fieldType = StringType, resolve = _.value.title),
+      Field(name = "description", fieldType = StringType, resolve = _.value.description),
+      Field(name = "genres", fieldType = StringType, resolve = _.value.genres),
+      Field(name = "actors", fieldType = StringType, resolve = _.value.actors),
+      Field(name = "rating", fieldType = StringType, resolve = _.value.rating),
+      Field("topActors", ListType(ActorType), arguments = Argument("top", IntType) :: Nil, resolve = c => c.value.topActors(c.arg(Argument("top", IntType)))))
     )
-  )
 
   // objectype = case class
   val MovieType = ObjectType(
@@ -139,7 +142,8 @@ object SchemaDefinitionMovieWithoutDerivation {
       Field("id", StringType, Some("the id of the movie."), resolve = _.value.id),
       Field("title", StringType, Some("the title of the movie."), resolve = _.value.title),
       Field("actors", ListType(ActorType), Some("the actors appearing in the movie"), resolve = _.value.actors),
-      Field("genres", ListType(GenreEnum), Some("the genres of the movie"), resolve = _.value.genres)
+      Field("genres", ListType(GenreEnum), Some("the genres of the movie"), resolve = _.value.genres),
+      Field(name = "rating", fieldType = StringType, resolve = _.value.rating)
     )
   )
 
@@ -151,7 +155,8 @@ object SchemaDefinitionMovieWithoutDerivation {
       Field("id", StringType, Some("the id of the tvshow."), resolve = _.value.id),
       Field("tile", StringType, Some("the title of the tvshow."), resolve = _.value.title),
       Field("actors", ListType(ActorType), Some("the actors appearing in the tvshow."), resolve = _.value.actors),
-      Field("genres", ListType(GenreEnum), Some("the genres of the tvshow."), resolve = _.value.genres)
+      Field("genres", ListType(GenreEnum), Some("the genres of the tvshow."), resolve = _.value.genres),
+      Field(name = "rating", fieldType = StringType, resolve = _.value.rating)
     )
   )
 
