@@ -1,7 +1,5 @@
-name := "sangria-akka-http-example"
+name := "sangria"
 version := "0.1.0-SNAPSHOT"
-
-description := "An example GraphQL server written with akka-http and sangria."
 
 scalaVersion := "2.12.3"
 scalacOptions ++= Seq("-deprecation", "-feature")
