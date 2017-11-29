@@ -1,8 +1,15 @@
-import sangria.renderer.SchemaRenderer
-import io.circe._
-import sangria.marshalling.circe._
-import sangria.schema.Schema
+import sangria.ast.Document
+import sangria.execution.Executor
 import sangria.macros._
+import sangria.marshalling.sprayJson._
+import sangria.renderer.SchemaRenderer
+import spray.json.{JsObject, JsValue}
+
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+
+
 
 object GraphQLClient {
 
@@ -13,10 +20,9 @@ object GraphQLClient {
     val graphQLSchema: String = SchemaRenderer.renderSchema(SchemaDefinitionMovie.GraphQLSchema)
     println(graphQLSchema)
 
-
-
-
-
   }
 
+
 }
+
+

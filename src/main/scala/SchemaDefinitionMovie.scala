@@ -1,36 +1,54 @@
-
-
-import sangria.schema.InterfaceType
+import controllers.MovieController
+import models._
+import sangria.macros.derive.{GraphQLDeprecated, GraphQLDescription, GraphQLField}
 import sangria.schema._
 
-
-/// Query Definition
-
-trait GraphQLQueryFields {
-
-  import sangria.macros.derive.GraphQLField
+@GraphQLDescription("This is our query type to fetch data")
+trait Query {
 
   @GraphQLField
-  def movies: Vector[Movie]
+  @GraphQLDescription("Fetch all movies")
+  def movies: Vector[Movie] = MovieController.getAllMovies
 
   @GraphQLField
-  def movie(id: String): Option[Movie] = movies.find(_.id == id)
+  @GraphQLDescription("Fetch a specific movie by id")
+  def movie(id: String): Option[Movie] = MovieController.getMovieById(id)
 
-  //  def actorRelatedMovies(last: Option[Int]) = {
-  //    ???
-  //  }
+  @GraphQLField
+  @GraphQLDescription("Fetch movies by genres")
+  def getMoviesByGenre(genres: Seq[Genre.Value]): Vector[Movie] = MovieController.getMoviesByGenres(genres)
+
+  @GraphQLField
+  @GraphQLDescription("Fetch a specific by title")
+  @GraphQLDeprecated("Please use movie field instead when possible")
+  def movieByTitle(title: String): Option[Movie] = MovieController.getMovieByTitle(title)
 
 }
 
-class GraphQLQueryRepo(moviesData: Vector[Movie]) {
+// Mutation Definition
+@GraphQLDescription("This is our mutation type to modify data")
+trait Mutation {
 
-  object Query extends GraphQLQueryFields {
-
-    override def movies: Vector[Movie] = moviesData
-
+  // Attention, on ne peux pas mettre en input une case class même si on la définit correctement (dérivationInputObjectType)
+  @GraphQLField
+  @GraphQLDescription("Add a new review to a movie")
+  def createReview(movieId: String, author: String, rating: Double, content: String): Option[Movie] = {
+    val review = Review(author = author, rating = rating, content = content)
+    MovieController.addReview(movieId, review)
   }
 
 }
+
+
+// Root context of our application
+class ApplicationContext {
+
+  object MutationObject extends Mutation
+
+  object QueryObject extends Query
+
+}
+
 
 /// Schema Definition
 
@@ -38,148 +56,22 @@ object SchemaDefinitionMovie {
 
   import sangria.macros.derive._
 
+  implicit val ReviewType: ObjectType[Unit, Review] = deriveObjectType[Unit, Review]()
+
   implicit val ActorType: ObjectType[Unit, Actor] = deriveObjectType[Unit, Actor]()
-
-
   implicit val TvShowType: ObjectType[Unit, TvShow] = deriveObjectType[Unit, TvShow]()
+  implicit val MovieType: ObjectType[VideoContext, Movie] = deriveObjectType[VideoContext, Movie](IncludeMethods("profit", "alert", "topActors", "lastReviews"))
 
   // Fonctionne aussi bien avec les Enumeration Scala que les sealed trait + case object
   implicit val GenreEnum: EnumType[Genre.Value] = deriveEnumType[Genre.Value]()
-
-  implicit val MovieType: ObjectType[Video, Movie] = deriveObjectType[Video, Movie](IncludeMethods("topActors"))
-
-//    val TopActorArg = Argument("top", IntType)
-//
-//    implicit val MovieType = ObjectType(
-//      "Movie",
-//      "Video you can watch at the theater",
-//      interfaces[Unit, Movie](SchemaDefinitionMovieWithoutDerivation.VideoType),
-//      fields = fields[Unit, Movie](
-//        Field("id", StringType, Some("the id of the movie."), resolve = _.value.id),
-//        Field("title", StringType, Some("the title of the movie."), resolve = _.value.title),
-//        Field("actors", ListType(ActorType), Some("the actors appearing in the movie"), resolve = _.value.actors),
-//        Field("genres", ListType(GenreEnum), Some("the genres of the movie"), resolve = _.value.genres),
-//        Field("topActors", ListType(ActorType),
-//          arguments = TopActorArg :: Nil,
-//          resolve = c => c.value.topActors(c.arg(TopActorArg)))
-//      )
-//    )
+//  implicit val GenreEnumSealed = deriveEnumType[GenreEnum]()
 
   // On récupère les champs depuis le trait GraphQLFields avec les annotations @GraphQLField
-  implicit val QueryType: ObjectType[GraphQLQueryRepo, Unit] = deriveContextObjectType[GraphQLQueryRepo, GraphQLQueryFields, Unit](_.Query)
+  val QueryType: ObjectType[ApplicationContext, Unit] = deriveContextObjectType[ApplicationContext, Query, Unit](_.QueryObject)
+
+  val MutationType: ObjectType[ApplicationContext, Unit] = deriveContextObjectType[ApplicationContext, Mutation, Unit](_.MutationObject)
 
   // On instancie le schema qui sera exposé
-  implicit val GraphQLSchema = Schema(QueryType)
-
-}
-
-////////
-
-object SchemaDefinitionMovieWithoutDerivation {
-
-  val ActorType = ObjectType(
-    "Actors",
-    "Actor appearing in the Videos",
-    fields = fields[Unit, Actor](
-      Field(name = "id", fieldType = StringType, resolve = _.value.id),
-      Field(name = "fullname", fieldType = StringType, resolve = _.value.fullname),
-      Field(name = "popularity", fieldType = OptionType(IntType), resolve = _.value.popularity)
-    )
-  )
-
-  val GenreEnum = EnumType(
-    "Genre",
-    Some("Genre of a video"),
-    List(
-      EnumValue("COMEDY",
-        value = Genre.COMEDY,
-        description = Some("Toc Toc Toc ...")
-      ),
-      EnumValue("ACTION",
-        value = Genre.ACTION,
-        description = Some("Action videos")
-      ),
-      EnumValue("HORROR",
-        value = Genre.HORROR,
-        description = Some("Bouuuh !")
-      ),
-      EnumValue("ANIMATION",
-        value = Genre.ANIMATION,
-        description = Some("Perfect to have a good time")
-      ),
-      EnumValue("ADVENTURE",
-        value = Genre.ADVENTURE,
-        description = Some("Adventure videos")
-      ),
-      EnumValue("SCI_FI",
-        value = Genre.SCI_FI,
-        description = Some("Weird stuff happening")
-      )
-    )
-  )
-
-  // _ correspond au trait Video
-  // trait = interface
-  val VideoType: InterfaceType[Unit, Video] = InterfaceType(
-    name = "Video",
-    description = "Template of any video",
-    fields = fields[Unit, Video](
-      Field(name = "id", fieldType = StringType, resolve = _.value.id),
-      Field(name = "title", fieldType = StringType, resolve = _.value.title),
-      Field(name = "description", fieldType = OptionType(StringType), resolve = _.value.description),
-      Field(name = "genres", fieldType = ListType(GenreEnum), resolve = _.value.genres),
-      Field(name = "actors", fieldType = ListType(ActorType), resolve = _.value.actors),
-      Field(name = "rating", fieldType = OptionType(FloatType), resolve = _.value.rating),
-      Field("topActors", ListType(ActorType), arguments = Argument("top", IntType) :: Nil, resolve = c => c.value.topActors(c.arg(Argument("top", IntType)))))
-    )
-
-  // objectype = case class
-  val MovieType = ObjectType(
-    "Movie",
-    "Video you can watch at the theater",
-    interfaces[Unit, Movie](VideoType),
-    fields = fields[Unit, Movie](
-      Field("id", StringType, Some("the id of the movie."), resolve = _.value.id),
-      Field("title", StringType, Some("the title of the movie."), resolve = _.value.title),
-      Field("actors", ListType(ActorType), Some("the actors appearing in the movie"), resolve = _.value.actors),
-      Field("genres", ListType(GenreEnum), Some("the genres of the movie"), resolve = _.value.genres),
-      Field(name = "rating", fieldType = OptionType(FloatType), resolve = _.value.rating)
-    )
-  )
-
-  val TvShowType = ObjectType(
-    "TvShow",
-    "Video you can watch on TV",
-    interfaces[Unit, TvShow](VideoType),
-    fields = fields[Unit, TvShow](
-      Field("id", StringType, Some("the id of the tvshow."), resolve = _.value.id),
-      Field("tile", StringType, Some("the title of the tvshow."), resolve = _.value.title),
-      Field("actors", ListType(ActorType), Some("the actors appearing in the tvshow."), resolve = _.value.actors),
-      Field("genres", ListType(GenreEnum), Some("the genres of the tvshow."), resolve = _.value.genres),
-      Field(name = "rating", fieldType = OptionType(FloatType), resolve = _.value.rating)
-    )
-  )
-
-
-  val MovieQueryArg = Argument("id", OptionInputType(StringType), description = "id of the movie")
-
-  val Query = ObjectType(
-    name = "Query",
-    description = "Required Query Schema",
-    fields = fields[MovieRepo, Unit](
-      Field("movie", OptionType(MovieType), arguments = MovieQueryArg :: Nil, resolve = (ctx) => ctx.ctx.movie(ctx.arg(MovieQueryArg)))
-    )
-  )
-
-  val GraphQLSchema: Schema[MovieRepo, Unit] = Schema(Query)
-
-}
-
-class MovieRepo {
-
-  def movies: Vector[Movie] = Data.moviesData
-
-  def movie(maybeId: Option[String]): Option[Movie] = movies.find(movie => maybeId.contains(movie.id))
-
+  val GraphQLSchema = Schema(QueryType, Some(MutationType))
 
 }

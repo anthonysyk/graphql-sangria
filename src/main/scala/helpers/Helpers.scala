@@ -1,6 +1,6 @@
 //package Helpers
 //
-//import Helpers.GraphQLHelper._
+//import helpers.GraphQLHelper._
 //import org.apache.spark.sql.Encoders
 //import org.apache.spark.sql.types.{ArrayType, DataType, StructField, StructType}
 //
