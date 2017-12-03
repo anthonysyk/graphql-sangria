@@ -43,15 +43,10 @@ sealed trait GenreEnum
 object GenreEnum {
 
   case object ACTION extends GenreEnum
-
   case object COMEDY extends GenreEnum
-
   case object HORROR extends GenreEnum
-
   case object ANIMATION extends GenreEnum
-
   case object ADVENTURE extends GenreEnum
-
   case object SCI_FI extends GenreEnum
 
 }
